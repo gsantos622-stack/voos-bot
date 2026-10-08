@@ -82,6 +82,22 @@ faixa.
 > o preço e o `price_insights` (média da rota) — é com isso que decidimos
 > se a oferta é promoção de verdade.
 
+### (Opcional, recomendado) Amadeus — 10.000 créditos/mês grátis
+
+Com as chaves do Amadeus, o bot passa a usar **Amadeus primeiro** e deixa o
+SerpAPI só de reserva. As buscas não contam na cota de 250 do SerpAPI e
+alguns preços voltam com a média da rota também:
+
+1. Cadastre-se em **https://developers.amadeus.com** (grátis).
+2. Entre em **My Apps → Add new app**, escolha *Self-Service* e crie um app.
+3. Copie o **API Key** (é o `AMADEUS_CLIENT_ID`) e o **API Secret**
+   (é o `AMADEUS_CLIENT_SECRET`).
+4. Adicione os dois como Secrets no GitHub (tabela do Passo 4).
+
+Enquanto não cadastrar, o bot usa **só o SerpAPI** — funciona normalmente.
+Para forçar qual fonte usar, crie a variável `FONTE_VOO` (`amadeus`,
+`serpapi` ou `ambos`; padrão com chaves cadastradas = `ambos`).
+
 ---
 
 ## Passo 3 — (Opcional) código de parceiro do GetYourGuide
@@ -122,6 +138,8 @@ No GitHub, entre em **Settings → Secrets and variables → Actions** e adicion
 | `TELEGRAM_CHAT_ID` | Seu chat id (ou vários separados por `,`) |
 | `SERPAPI_KEY` | Sua API Key do SerpAPI |
 | `GETYOURGUIDE_PARTNER_ID` | (opcional) id de parceiro GetYourGuide |
+| `AMADEUS_CLIENT_ID` | (opcional) API Key do Amadeus |
+| `AMADEUS_CLIENT_SECRET` | (opcional) API Secret do Amadeus |
 
 ### Ajustes (opcionais) — aba *Variables*
 
@@ -271,9 +289,9 @@ O bot também tenta te avisar **por Telegram** caso alguma rodada falhe.
 
 ---
 
-## Roadmap (v2)
+## Roadmap
 
-- **Amadeus Self-Service API** como segunda fonte (10.000 créditos/mês grátis)
-  e fallback quando a cota do SerpAPI acabar.
+- ✅ **Amadeus Self-Service API** como fonte principal (10.000 créditos/mês
+  grátis), com fallback automático para o SerpAPI. Nunca mais esbarra nos 250.
 - Página web estática (GitHub Pages) mostrando as últimas ofertas.
 - Hospedagem em camada grátis (Render/PythonAnywhere) para o modo polling 24/7.

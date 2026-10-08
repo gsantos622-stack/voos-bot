@@ -1,11 +1,12 @@
 """
 Bot de oportunidades de passagens aereas + ideias de passeio (GetYourGuide).
 
-Fonte de voos: SerpAPI (widget Google Flights) — busca de ida e volta para um
-aeroporto de origem x uma lista de destinos. Compara o menor preco achado com
-o preco-medio da rota (price_insights.typical_price_range) e so envia quando
+Fonte de voos: Amadeus (se as chaves estiverem configuradas) com fallback
+para SerpAPI (widget Google Flights) — busca de ida e volta para um aeroporto
+de origem x uma lista de destinos. Compara o menor preco achado com o
+preco-medio da rota (price_insights.typical_price_range) e so envia quando
 a oferta esta igual ou abaixo da media. A roteacao de origem/destino roda
-gratis no GitHub Actions, respeitando a cota free do SerpAPI.
+gratis no GitHub Actions, respeitando a cota free de cada API.
 
 Modos de execucao:
 
@@ -32,6 +33,8 @@ from pathlib import Path
 import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
+
+import amadeus
 
 from telegram.ext import Application, CommandHandler, ContextTypes
 from telegram import Update
@@ -668,6 +671,132 @@ def _url_google_flights(d_out: date, d_ret: date, origem: str, destino: str, cid
 
 
 # ---------------------------------------------------------------------------
+# Amadeus (fonte v2, 10.000 creditos/mes gratis)
+# ---------------------------------------------------------------------------
+
+def _credenciais_amadeus() -> tuple[str, str] | None:
+    cid = _env("AMADEUS_CLIENT_ID")
+    sec = _env("AMADEUS_CLIENT_SECRET")
+    if cid and sec:
+        return cid, sec
+    return None
+
+
+def _fonte_voo() -> str:
+    """serpapi | amadeus | ambos (amadeus primeiro, serpapi de reserva)."""
+    fonte = _env("FONTE_VOO").lower()
+    if fonte in ("serpapi", "amadeus", "ambos"):
+        return fonte
+    if _credenciais_amadeus():
+        return "ambos"
+    return "serpapi"
+
+
+def _extrair_deal_amadeus(oferta: dict, origem: str, destino: str,
+                          d_out: date, d_ret: date, tipo: int) -> dict | None:
+    """Converte uma oferta do Flight Offers Search no formato unificado."""
+    preco_obj = oferta.get("price") or {}
+    preco = int(_para_int_float(preco_obj.get("grandTotal") or preco_obj.get("total")) + 0.5)
+    if preco <= 0:
+        return None
+
+    itinerarios = oferta.get("itineraries") or []
+    if not itinerarios:
+        return None
+    itin = itinerarios[0]
+    trechos = itin.get("segments") or []
+    escalas = max(0, len(trechos) - 1)
+
+    companhias = []
+    for s in trechos:
+        codigo = str(s.get("carrierCode") or "").strip()
+        if codigo:
+            nome = amadeus.nome_companhia(codigo)
+            if nome not in companhias:
+                companhias.append(nome)
+    if not companhias:
+        for cd in (oferta.get("validatingAirlineCodes") or []):
+            nome = amadeus.nome_companhia(cd)
+            if nome not in companhias:
+                companhias.append(nome)
+
+    brasileiras = [c for c in companhias if _e_brasileira(c)]
+    principal = _limpar_texto(companhias[0]) if companhias else ""
+    duracao = amadeus._pt_para_segundos(itin.get("duration"))
+    cidade = CIDADES_POR_IATA.get(destino, destino)
+
+    return {
+        "origem": origem,
+        "iata": destino,
+        "cidade": cidade,
+        "data_out": d_out.isoformat(),
+        "data_ret": d_ret.isoformat() if tipo == 1 else "",
+        "tipo": tipo,
+        "preco": preco,
+        "preco_media": None,
+        "companhias": companhias,
+        "principal": principal,
+        "brasileira": bool(brasileiras),
+        "duracao": _formatar_duracao(duracao),
+        "escalas": escalas,
+        "url": _url_google_flights(d_out, d_ret, origem, destino, cidade),
+    }
+
+
+def _para_int_float(valor) -> float:
+    if isinstance(valor, (int, float)):
+        return float(valor)
+    s = str(valor or "").strip()
+    if "," in s and "." in s:
+        s = s.replace(".", "").replace(",", ".")   # milhar ponto + decimal virgula
+    elif "," in s:
+        s = s.replace(",", ".")                    # so decimal virgula
+    m = re.search(r"-?\d+(?:\.\d+)?", s)
+    return float(m.group(0)) if m else 0.0
+
+
+def _deal_amadeus(creds, origem: str, destino: str, d_out: date, d_ret: date,
+                  tipo: int) -> dict | None:
+    """Busca no Amadeus e devolve a oferta unificada (ou None)."""
+    max_preco = _env("MAX_PRECO")
+    ofertas = amadeus.ofertas(
+        creds[0], creds[1], origem, destino, d_out, d_ret, max_preco
+    )
+    if not ofertas:
+        return None
+    oferta = min(ofertas, key=lambda o: _para_int_float(
+        (o.get("price") or {}).get("grandTotal") or (o.get("price") or {}).get("total")))
+    return _extrair_deal_amadeus(oferta, origem, destino, d_out, d_ret, tipo)
+
+
+def _obter_deal(origem: str, destino: str, d_out: date, d_ret: date,
+                tipo: int, sessao) -> dict | None:
+    """Dispara a fonte primaria (+ fallback) e devolve 1 oferta por destino."""
+    fonte = _fonte_voo()
+    creds = _credenciais_amadeus()
+
+    if fonte in ("amadeus", "ambos") and creds:
+        try:
+            deal = _deal_amadeus(creds, origem, destino, d_out, d_ret, tipo)
+            if deal:
+                log.info("Fonte: Amadeus (%s -> %s)", origem, destino)
+                return deal
+        except Exception as e:  # noqa: BLE001
+            log.exception("Amadeus falhou para %s -> %s", origem, destino)
+            if fonte == "amadeus":
+                raise
+            log.warning("Fallback para SerpAPI.")
+
+    if fonte in ("serpapi", "ambos"):
+        dados = _buscar_voo(origem, destino, d_out, d_ret, sessao)
+        deal = _extrair_deal(dados, origem, destino, d_out, d_ret, tipo)
+        if deal:
+            log.info("Fonte: SerpAPI (%s -> %s)", origem, destino)
+        return deal
+    return None
+
+
+# ---------------------------------------------------------------------------
 # GetYourGuide
 # ---------------------------------------------------------------------------
 
@@ -857,8 +986,7 @@ async def _processar_origem(app, origem: str, sessao, cache: dict) -> tuple[int,
     achados: list[dict] = []
     for destino in destinos:
         try:
-            dados = _buscar_voo(origem, destino, d_out, d_ret, sessao)
-            deal = _extrair_deal(dados, origem, destino, d_out, d_ret, tipo)
+            deal = _obter_deal(origem, destino, d_out, d_ret, tipo, sessao)
             if not deal:
                 log.info("Sem oferta para %s -> %s.", origem, destino)
                 continue
@@ -934,9 +1062,10 @@ async def _cmd_status(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
     cache = _ler_cache()
     texto = (
         "<b>Configuração</b>\n"
+        f"Fonte de voos: <code>{_fonte_voo()}</code>\n"
         f"Origem (rotacao): <code>{_env('ORIGENS_ROTACAO', 'GRU,GRU,CGH')}</code>\n"
         f"Destinos por rodada: <code>{_env('DESTINOS_POR_EXECUCAO', '2')}</code>\n"
-        f"Pool de destinos: <code>{_env('DESTINOS_POOL', '—')}</code>\n"
+        f"Pool de destinos: <code>{_env('DESTINOS_POOL', POOL_PADRAO)[:60]}</code>\n"
         f"Preço máximo: <code>R$ {_env('MAX_PRECO', '3500')}</code>\n"
         f"Ofertas no cache: <code>{len(cache.get('vistos') or {})}</code>\n"
         f"Última atualização: <code>{cache.get('atualizado', '—')}</code>"

@@ -43,6 +43,7 @@ env:
   RETURN_DATE: ${{ inputs.return_date || vars.RETURN_DATE || '' }}
   ORIGEM_FIXA: ${{ inputs.origem_fixa || '' }}
   DESTINOS_FOCADOS: ${{ inputs.focar_destinos || '' }}
+  FONTE_VOO: ${{ vars.FONTE_VOO || '' }}
   FORCAR_BUSCA: ${{ github.event_name == 'workflow_dispatch' && 'true' || 'false' }}
 
 jobs:
@@ -75,4 +76,6 @@ jobs:
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           SERPAPI_KEY: ${{ secrets.SERPAPI_KEY }}
           GETYOURGUIDE_PARTNER_ID: ${{ secrets.GETYOURGUIDE_PARTNER_ID }}
+          AMADEUS_CLIENT_ID: ${{ secrets.AMADEUS_CLIENT_ID }}
+          AMADEUS_CLIENT_SECRET: ${{ secrets.AMADEUS_CLIENT_SECRET }}
         run: python main.py
