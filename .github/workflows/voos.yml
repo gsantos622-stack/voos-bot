@@ -1,0 +1,54 @@
+name: Voos Bot
+
+on:
+  schedule:
+    - cron: "0 */6 * * *"   # a cada 6 horas (00h, 06h, 12h, 18h UTC)
+  workflow_dispatch:        # permite rodar manualmente na aba "Actions"
+
+concurrency:
+  group: voos-bot
+  cancel-in-progress: false
+
+env:
+  ORIGENS_ROTACAO: ${{ vars.ORIGENS_ROTACAO || 'GRU,GRU,CGH' }}
+  DESTINOS_POOL: ${{ vars.DESTINOS_POOL || 'MIA,FLL,JFK,MCO,CDG,LIS,MAD,BCN,LHR,FCO,MXP,EZE,SCL,CUZ,CUN,PUJ,BOG,LIM,GIG,SSA' }}
+  DESTINOS_POR_EXECUCAO: ${{ vars.DESTINOS_POR_EXECUCAO || '2' }}
+  MAX_PRECO: ${{ vars.MAX_PRECO || '3500' }}
+  MAX_MENSAGENS: ${{ vars.MAX_MENSAGENS || '5' }}
+  MAX_ESCALAS: ${{ vars.MAX_ESCALAS || '2' }}
+  TIPO_VOO: ${{ vars.TIPO_VOO || '1' }}
+  MES_ALVO: ${{ vars.MES_ALVO || '' }}
+  OUTBOUND_DATE: ${{ vars.OUTBOUND_DATE || '' }}
+  RETURN_DATE: ${{ vars.RETURN_DATE || '' }}
+
+jobs:
+  voos:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Restaurar cache de ofertas (dedupe)
+        uses: actions/cache@v4
+        with:
+          path: cache
+          key: voos-cache-${{ github.run_id }}
+          restore-keys: |
+            voos-cache-
+
+      - name: Instalar dependencias
+        run: pip install -r requirements.txt
+
+      - name: Rodar o bot
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          SERPAPI_KEY: ${{ secrets.SERPAPI_KEY }}
+          GETYOURGUIDE_PARTNER_ID: ${{ secrets.GETYOURGUIDE_PARTNER_ID }}
+        run: python main.py
