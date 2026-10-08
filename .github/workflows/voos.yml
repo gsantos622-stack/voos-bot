@@ -4,6 +4,27 @@ on:
   schedule:
     - cron: "0 */6 * * *"   # a cada 6 horas (00h, 06h, 12h, 18h UTC)
   workflow_dispatch:        # permite rodar manualmente na aba "Actions"
+    inputs:
+      origem_fixa:
+        description: "Origem (ex: GRU). Vazio = usa a rotacao padrão"
+        required: false
+        default: ""
+      focar_destinos:
+        description: "Focar destinos (IATA separados por virgula). Ex: MAD,BCN (Europa) | NRT,TYO (Japao). Vazio = pool padrão"
+        required: false
+        default: ""
+      mes_alvo:
+        description: "Mes a buscar (AAAA-MM). Vazio = proximo mes"
+        required: false
+        default: ""
+      outbound_date:
+        description: "Ida no dia exato (AAAA-MM-DD). Sobrepõe mes_alvo"
+        required: false
+        default: ""
+      return_date:
+        description: "Volta no dia exato (AAAA-MM-DD) — junto com outbound_date"
+        required: false
+        default: ""
 
 concurrency:
   group: voos-bot
@@ -17,9 +38,11 @@ env:
   MAX_MENSAGENS: ${{ vars.MAX_MENSAGENS || '5' }}
   MAX_ESCALAS: ${{ vars.MAX_ESCALAS || '2' }}
   TIPO_VOO: ${{ vars.TIPO_VOO || '1' }}
-  MES_ALVO: ${{ vars.MES_ALVO || '' }}
-  OUTBOUND_DATE: ${{ vars.OUTBOUND_DATE || '' }}
-  RETURN_DATE: ${{ vars.RETURN_DATE || '' }}
+  MES_ALVO: ${{ inputs.mes_alvo || vars.MES_ALVO || '' }}
+  OUTBOUND_DATE: ${{ inputs.outbound_date || vars.OUTBOUND_DATE || '' }}
+  RETURN_DATE: ${{ inputs.return_date || vars.RETURN_DATE || '' }}
+  ORIGEM_FIXA: ${{ inputs.origem_fixa || '' }}
+  DESTINOS_FOCADOS: ${{ inputs.focar_destinos || '' }}
   FORCAR_BUSCA: ${{ github.event_name == 'workflow_dispatch' && 'true' || 'false' }}
 
 jobs:
@@ -28,15 +51,15 @@ jobs:
     timeout-minutes: 15
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Python 3.12
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 
       - name: Restaurar cache de ofertas (dedupe)
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: cache
           key: voos-cache-${{ github.run_id }}

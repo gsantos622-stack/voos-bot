@@ -748,7 +748,15 @@ def _origens_do_dia() -> list[str]:
 
 
 def _destinos_do_dia() -> list[str]:
-    """Janela deslizante sobre o pool de DESTINOS: cobre todos no periodo."""
+    """Destinos desta rodada: DESTINOS_FOCADOS (sobrepoe) ou janela do pool."""
+    focados = _env("DESTINOS_FOCADOS")
+    if focados:
+        lista = [d.strip().upper() for d in focados.replace(";", ",").split(",") if d.strip()]
+        if not lista:
+            raise RuntimeError("DESTINOS_FOCADOS vazio.")
+        log.info("Destinos focados para esta rodada: %s", ", ".join(lista))
+        return lista
+
     pool = [d.strip().upper() for d in _env("DESTINOS_POOL", POOL_PADRAO).split(",") if d.strip()]
     if not pool:
         raise RuntimeError("DESTINOS_POOL vazio. Defina a lista de destinos.")

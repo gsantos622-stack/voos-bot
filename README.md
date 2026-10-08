@@ -161,6 +161,30 @@ A janela de destinos é **deslizante**: cada rodada pega um pedacinho do
 
 ---
 
+## Focar em um destino específico (Europa, Japão, etc.)
+
+Duas formas:
+
+**1. Disparo manual com foco (mais rápido)** — na aba **Actions → Voos Bot →
+Run workflow** você vê campos opcionais antes de disparar:
+- `focar_destinos`: escreva os IATA desejados. Ex.:
+  - Europa: `MAD,BCN,LIS,CDG,LHR,FCO,MXP`
+  - Japão: `NRT,TIY,HND,CTS`
+  - Deixa em branco = segue o pool padrão.
+- `origem_fixa`: ex. `GRU`, `CGH` ou `VCP`.
+- `mes_alvo`: `2026-12` para planejar dezembro, etc.
+- `outbound_date` / `return_date`: datas exatas de ida e volta.
+
+**2. Foco permanente (sem digitar toda vez)** — em
+**Settings → Secrets and variables → Actions → Variables**, edite
+`DESTINOS_POOL` para a lista fixa que quiser (ex.: só Europa). A rotão
+deslizante passa a percorrer só essa lista.
+
+> Dupla: a mudança de `DESTINOS_POOL` vale para as próximas rodadas
+> automáticas; o `focar_destinos` vale só para aquele disparo manual.
+
+---
+
 ## Passo 5 — Testar
 
 ### Primeira execução manual
