@@ -128,7 +128,7 @@ No GitHub, entre em **Settings → Secrets and variables → Actions** e adicion
 | Variable | Padrão | O que faz |
 |---|---|---|
 | `ORIGENS_ROTACAO` | `GRU,GRU,CGH` | Aeroportos de origem, sequência diária |
-| `DESTINOS_POOL` | 20 destinos populares | Lista de destinos monitorados (IATA) |
+| `DESTINOS_POOL` | 27 cidades (EUA, Europa, Japão, Caribe, Brasil) | Lista de destinos monitorados (IATA) |
 | `DESTINOS_POR_EXECUCAO` | `2` | Quantos destinos buscar a cada rodada |
 | `MAX_PRECO` | `3500` | Teto de preço (ida e volta, por pessoa) |
 | `MAX_MENSAGENS` | `5` | Máximo de ofertas enviadas por rodada |
@@ -154,7 +154,8 @@ Com `DESTINOS_POR_EXECUCAO = 2`, temos:
 ou mais destinos por rodada.
 
 A janela de destinos é **deslizante**: cada rodada pega um pedacinho do
-`DESTINOS_POOL`, e em ~3 dias todas as cidades já foram verificadas.
+`DESTINOS_POOL`, e em ~4 dias todas as cidades já foram verificadas
+(pool de 27 cidades × 6h por janela).
 
 > Fuso: o cron do GitHub roda em **UTC**. As 00h/06h/12h/18h UTC correspondem
 > a 21h/03h/09h/15h no horário de Brasília.

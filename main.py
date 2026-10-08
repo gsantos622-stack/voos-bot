@@ -297,6 +297,74 @@ ROTEIROS = {
             "Passeio em Maracajaú (águas calmas)",
         ],
     },
+    "AMESTERDA": {
+        "cidade": "Amesterdã",
+        "gyg": ("amsterdam", 19),
+        "ideias": [
+            "Cruzeiro pelos canais do Jordaan",
+            "Museu Van Gogh e Rijksmuseum",
+            "Day trip para os moinhos de Zaanse Schans",
+        ],
+    },
+    "PORTO": {
+        "cidade": "Porto",
+        "ideias": [
+            "Passeio de barco pelo Rio Douro e cais da Ribeira",
+            "Vinícolas do Vale do Douro com degustação",
+            "Torre dos Clérigos e Livraria Lello",
+        ],
+    },
+    "MONTE GO BAY": {
+        "cidade": "Montego Bay",
+        "ideias": [
+            "Rafting no rio Martha Brae",
+            "Dunn's River Falls e Rose Hall",
+            "Passeio de catamarã para Doctor's Cave Beach",
+        ],
+    },
+    "CURACAO": {
+        "cidade": "Curaçao",
+        "ideias": [
+            "Passeio pelas casas coloridas de Willemstad",
+            "Klein Curaçao ou praias de Mambo Beach",
+            "Playa Kenepa e parque Shete Boka",
+        ],
+    },
+    "LOS ANGELES": {
+        "cidade": "Los Angeles",
+        "gyg": ("los-angeles", 75),
+        "ideias": [
+            "Hollywood, Walk of Fame e Griffith Observatory",
+            "Universal Studios Hollywood",
+            "Malibu e Santa Monica de carro/bicicleta",
+        ],
+    },
+    "TOQUIO": {
+        "cidade": "Tóquio",
+        "gyg": ("tokyo", 81),
+        "ideias": [
+            "Shibuya Crossing, Harajuku e Asakusa",
+            "Day trip para o Monte Fuji",
+            "Tour gastronômico e mercados (Tsukiji/Ueno)",
+        ],
+    },
+    "OSAKA": {
+        "cidade": "Osaka",
+        "gyg": ("osaka", 16),
+        "ideias": [
+            "Castelo de Osaka e Dotonbori",
+            "Day trip para Kyoto (templos e santuários)",
+            "Universal Studios Japan",
+        ],
+    },
+    "FLORIANOPOLIS": {
+        "cidade": "Florianópolis",
+        "ideias": [
+            "Lagoa da Conceição e ilha do Campeche",
+            "Praias do Leste (Mole, Joaquina) e dunas",
+            "Costa da Lagoa e trilhas da Lagoinha do Leste",
+        ],
+    },
 }
 
 IDEIAS_GENERICAS = [
@@ -329,11 +397,15 @@ CIDADES_POR_IATA = {
     "GIG": "Rio de Janeiro", "SSA": "Salvador", "FOR": "Fortaleza",
     "REC": "Recife", "NAT": "Natal", "CWB": "Curitiba",
     "POA": "Porto Alegre", "BSB": "Brasília", "FLN": "Florianópolis",
+    "AMS": "Amesterdã", "OPO": "Porto", "MBJ": "Montego Bay",
+    "CUR": "Curaçao", "LAX": "Los Angeles", "HND": "Tóquio",
+    "NRT": "Tóquio", "KIX": "Osaka",
 }
 
 # Pool de destinos monitorados. A rotacao abaixo escolhe uma janela pequena
 # por rodada para nao estourar a cota gratuita do SerpAPI.
-POOL_PADRAO = "MIA,FLL,JFK,MCO,CDG,LIS,MAD,BCN,LHR,FCO,MXP,EZE,SCL,CUZ,CUN,PUJ,BOG,LIM,GIG,SSA"
+# Foco: Europa | Brasil | Japao | Caribe | EUA
+POOL_PADRAO = "MIA,FLL,JFK,MCO,LAX,CDG,LIS,MAD,BCN,LHR,FCO,MXP,AMS,OPO,NRT,HND,KIX,CUN,PUJ,MBJ,CUR,GIG,SSA,FOR,REC,NAT,FLN"
 
 NOMES_ORIGENS = {
     "GRU": "Guarulhos", "CGH": "Congonhas", "VCP": "Viracopos",
