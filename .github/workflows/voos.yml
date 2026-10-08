@@ -20,10 +20,11 @@ env:
   MES_ALVO: ${{ vars.MES_ALVO || '' }}
   OUTBOUND_DATE: ${{ vars.OUTBOUND_DATE || '' }}
   RETURN_DATE: ${{ vars.RETURN_DATE || '' }}
+  FORCAR_BUSCA: ${{ github.event_name == 'workflow_dispatch' && 'true' || 'false' }}
 
 jobs:
   voos:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
       - name: Checkout

@@ -737,6 +737,9 @@ def _origens_do_dia() -> list[str]:
     hora_utc = datetime.now(timezone.utc).hour
     posicao = hora_utc // 6
     if posicao >= len(rotacao):
+        if _env_bool("FORCAR_BUSCA", False) and rotacao:
+            log.info("Rodada em repouso, mas FORCAR_BUSCA esta ligado: forçando %s.", rotacao[0])
+            return [rotacao[0]]
         log.info("Rodada %s da rotacao em repouso (cota gratis).", posicao)
         return []
     origem = rotacao[posicao]
