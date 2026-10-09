@@ -933,6 +933,7 @@ def _chats() -> list[str]:
 async def _enviar_deal(app, deal: dict) -> None:
     texto = _montar_mensagem(deal)
     for chat in _chats():
+        ok = False
         try:
             await app.bot.send_message(
                 chat_id=chat,
@@ -940,11 +941,29 @@ async def _enviar_deal(app, deal: dict) -> None:
                 parse_mode="HTML",
                 disable_web_page_preview=True,
             )
+            ok = True
+        except Exception as e:  # noqa: BLE001
+            log.exception("envio via python-telegram-bot falhou p/ %s (%s); caindo p/ HTTP direto.", chat, e)
+        if not ok:
+            try:
+                resp = requests.post(
+                    f"https://api.telegram.org/bot{_token_obrigatorio('TELEGRAM_TOKEN')}/sendMessage",
+                    data={
+                        "chat_id": chat,
+                        "text": texto,
+                        "parse_mode": "HTML",
+                        "disable_web_page_preview": True,
+                    },
+                    timeout=20,
+                )
+                resp.raise_for_status()
+                ok = True
+            except Exception as e:  # noqa: BLE001
+                log.error("Falhou tambem via HTTP direto p/ %s: %s", chat, e)
+        if ok:
             log.info("Enviada oferta %s -> %s (R$ %s) para %s",
                      deal["origem"], deal["iata"], deal["preco"], chat)
-            await asyncio.sleep(1.2)
-        except Exception as e:  # noqa: BLE001
-            log.error("Falha ao enviar para %s: %s", chat, e)
+        await asyncio.sleep(1.2)
 
 
 def _notificar_erro(resumo: str) -> None:
