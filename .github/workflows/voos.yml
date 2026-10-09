@@ -84,6 +84,12 @@ jobs:
           AMADEUS_CLIENT_SECRET: ${{ secrets.AMADEUS_CLIENT_SECRET }}
         run: python main.py
 
+      - name: Buscar ofertas de milhas
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python milhas.py
+
       - name: Gerar pagina de ofertas
         run: python gerar_site.py
 

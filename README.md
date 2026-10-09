@@ -261,13 +261,26 @@ Para testar uma busca de verdade na hora, use (gasta 1–2 buscas da cota):
 
 ## Página de ofertas (GitHub Pages)
 
-A cada rodada o bot grava `cache/ofertas.json` e o workflow gera um site
-estático com as últimas promoções (o link vai junto no resumo do Telegram).
+A cada rodada o bot grava `cache/ofertas.json` (ofertas em dinheiro) e
+`cache/milhas.json`, e o workflow gera um site estático com as duas seções
+(o link vai junto no resumo do Telegram).
 
 1. Ative o Pages: **Settings → Pages → Source: GitHub Actions**.
 2. Pronto — o site fica em
    `https://gsantos622-stack.github.io/voos-bot/`.
 3. Localmente, `python gerar_site.py` gera a pasta `site/` para pré-visualizar.
+
+### Ofertas em milhas (rover de feeds)
+
+`milhas.py` varre **feeds RSS públicos** de sites que curam ofertas de milhas
+(ex.: Passageiro de Primeira) e filtra apenas **emissão de passagens** com
+Smiles, LATAM Pass ou Azul. Não usa cota do SerpAPI e não faz scraping de
+login — só consome feeds oficiais.
+
+- `python milhas.py --listar` mostra o que seria enviado (não envia).
+- Roda automático junto da rodada (passo *Buscar ofertas de milhas*).
+- Ajustes: `MILHAS_HORAS` (janela em horas, padrão `30`), `MAX_MILHAS`
+  (envios por rodada, padrão `5`).
 
 ---
 
@@ -288,5 +301,5 @@ O bot também tenta te avisar **por Telegram** caso alguma rodada falhe.
 
 ## Roadmap
 
-- ✅ Página web estática (GitHub Pages) com as últimas promoções.
+- ✅ Página web estática (GitHub Pages) com promoções em dinheiro e milhas.
 - Hospedagem em camada grátis (Render/PythonAnywhere) para o modo polling 24/7.

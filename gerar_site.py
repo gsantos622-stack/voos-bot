@@ -15,6 +15,7 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent
 OFERTAS_FILE = BASE_DIR / "cache" / "ofertas.json"
+MILHAS_FILE = BASE_DIR / "cache" / "milhas.json"
 SITE_DIR = BASE_DIR / "site"
 
 
@@ -73,15 +74,36 @@ def _cartao(o: dict) -> str:
       </a>"""
 
 
-def _gerar_html(ofertas: list[dict], atualizado: str = "") -> str:
+def _cartao_milha(m: dict) -> str:
+    when = ""
+    if m.get("publicado"):
+        try:
+            when = " · " + datetime.fromisoformat(m["publicado"]).strftime("%d/%m/%Y")
+        except ValueError:
+            when = ""
+    return f"""
+      <a class="mcard" href="{escape(m.get('link') or '#')}" target="_blank" rel="noopener">
+        <div class="mtitulo">{escape(m.get('titulo') or '')}</div>
+        <div class="mresumo">{escape(m.get('resumo') or '')}</div>
+        <div class="mfonte">📰 {escape(m.get('fonte') or '')}{when}</div>
+      </a>"""
+
+
+def _gerar_html(ofertas: list[dict], milhas: list[dict], atualizado: str = "") -> str:
     if ofertas:
         cards = "\n".join(_cartao(o) for o in sorted(ofertas, key=lambda x: x.get("preco") or 0))
-        corpo = f'<div class="grid">{cards}</div>'
+        corpo = f'<h2>💵 Melhores preços em dinheiro</h2><div class="grid">{cards}</div>'
     else:
         corpo = (
-            '<div class="vazio">Ainda não há promoções registradas.<br>'
+            '<div class="vazio">Ainda não há promoções em dinheiro registradas.<br>'
             "O bot busca ofertas 2× por dia (21h e 09h, horário de Brasília).</div>"
         )
+
+    if milhas:
+        mcards = "\n".join(_cartao_milha(m) for m in milhas[:24])
+        bloco_milhas = f'<h2>🏅 Ofertas em milhas</h2><div class="grid">{mcards}</div>'
+    else:
+        bloco_milhas = ""
 
     rodape = (
         f"<footer>Última atualização: {atualizado} · Dados atualizados automaticamente "
@@ -106,11 +128,12 @@ def _gerar_html(ofertas: list[dict], atualizado: str = "") -> str:
   h1 {{ font-size: 26px; color: #fff; }}
   h1 span {{ color: #38bdf8; }}
   p.sub {{ color: #94a3b8; margin-top: 6px; }}
+  h2 {{ max-width: 1000px; margin: 28px auto 14px; font-size: 18px; color: #fff; }}
   .grid {{ display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; max-width: 1000px; margin: 0 auto; }}
-  a.card {{ text-decoration: none; color: inherit; background: #1e293b; border: 1px solid #334155;
+  a.card, a.mcard {{ text-decoration: none; color: inherit; background: #1e293b; border: 1px solid #334155;
     border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 10px;
     transition: transform .12s ease, border-color .12s ease; }}
-  a.card:hover {{ transform: translateY(-3px); border-color: #38bdf8; }}
+  a.card:hover, a.mcard:hover {{ transform: translateY(-3px); border-color: #38bdf8; }}
   .card-top {{ display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }}
   .cidade {{ font-size: 18px; font-weight: 700; color: #fff; }}
   .iata {{ font-size: 11px; color: #cbd5e1; background: #0f172a; border: 1px solid #334155;
@@ -123,6 +146,9 @@ def _gerar_html(ofertas: list[dict], atualizado: str = "") -> str:
   .meta {{ display: flex; flex-wrap: wrap; gap: 6px 12px; font-size: 12px; color: #94a3b8; }}
   .ponte {{ display: flex; justify-content: space-between; gap: 8px; border-top: 1px solid #334155; padding-top: 10px; }}
   .link {{ color: #38bdf8; font-size: 12px; font-weight: 600; }}
+  .mtitulo {{ font-size: 15px; font-weight: 700; color: #fff; }}
+  .mresumo {{ font-size: 13px; color: #94a3b8; }}
+  .mfonte {{ font-size: 12px; color: #64748b; border-top: 1px solid #334155; padding-top: 8px; }}
   footer {{ max-width: 1000px; margin: 32px auto 0; color: #64748b; font-size: 12px; text-align: center; }}
   .vazio {{ text-align: center; color: #94a3b8; padding: 60px 16px; background: #1e293b;
     border-radius: 14px; border: 1px dashed #334155; max-width: 1000px; margin: 0 auto; }}
@@ -131,10 +157,12 @@ def _gerar_html(ofertas: list[dict], atualizado: str = "") -> str:
 <body>
   <header>
     <h1>✈️ Passagens em <span>promoção</span> saindo do Brasil</h1>
-    <p class="sub">Ofertas reais (preço ≤ média da rota), monitoradas automaticamente de Guarulhos,
-    Congonhas e parceiros. Fonte: Google Flights.</p>
+    <p class="sub">Ofertas reais monitoradas automaticamente de Guarulhos, Congonhas e parceiros —
+    em <b>dinheiro</b> (preço ≤ média da rota, via Google Flights) e em <b>milhas</b>
+    (curadoria pública de Smiles, LATAM Pass e Azul).</p>
   </header>
   {corpo}
+  {bloco_milhas}
   {rodape}
 </body>
 </html>"""
@@ -159,13 +187,24 @@ def main() -> int:
     if not isinstance(ofertas, list):
         ofertas = []
 
+    milhas: list[dict] = []
+    if MILHAS_FILE.exists():
+        try:
+            dados = json.loads(MILHAS_FILE.read_text(encoding="utf-8"))
+            if isinstance(dados, list):
+                milhas = dados
+        except (ValueError, OSError):
+            milhas = []
+
     SITE_DIR.mkdir(parents=True, exist_ok=True)
     (SITE_DIR / "index.html").write_text(
-        _gerar_html(ofertas, atualizado), encoding="utf-8")
+        _gerar_html(ofertas, milhas, atualizado), encoding="utf-8")
     if ofertas:
         shutil.copyfile(OFERTAS_FILE, SITE_DIR / "ofertas.json")
+    if milhas:
+        shutil.copyfile(MILHAS_FILE, SITE_DIR / "milhas.json")
 
-    print(f"Pagina gerada: {len(ofertas)} ofertas em {SITE_DIR / 'index.html'}")
+    print(f"Pagina gerada: {len(ofertas)} ofertas + {len(milhas)} milhas em {SITE_DIR / 'index.html'}")
     return 0
 
 
