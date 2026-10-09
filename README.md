@@ -147,7 +147,7 @@ No GitHub, entre em **Settings → Secrets and variables → Actions** e adicion
 |---|---|---|
 | `ORIGENS_ROTACAO` | `GRU,GRU,CGH` | Aeroportos de origem, sequência diária |
 | `DESTINOS_POOL` | 27 cidades (EUA, Europa, Japão, Caribe, Brasil) | Lista de destinos monitorados (IATA) |
-| `DESTINOS_POR_EXECUCAO` | `2` | Quantos destinos buscar a cada rodada |
+| `DESTINOS_POR_EXECUCAO` | `4` | Quantos destinos buscar a cada rodada |
 | `MAX_PRECO` | `3500` | Teto de preço (ida e volta, por pessoa) |
 | `MAX_MENSAGENS` | `5` | Máximo de ofertas enviadas por rodada |
 | `MAX_ESCALAS` | `2` | `0`=qualquer, `1`=só direto, `2`=até 1 escala, `3`=até 2 |
@@ -162,21 +162,18 @@ No GitHub, entre em **Settings → Secrets and variables → Actions** e adicion
 
 Padrão `ORIGENS_ROTACAO = GRU,GRU,CGH`:
 - Rodada das 00h → busca **GRU** (Guarulhos)
-- Rodada das 06h → busca **GRU**
 - Rodada das 12h → busca **CGH** (Congonhas)
-- Rodada das 18h → repouso (poupa a cota)
+- Rodadas das 06h/18h → repouso (poupa a cota)
 
-Com `DESTINOS_POR_EXECUCAO = 2`, temos:
-**2 destinos × 3 rodadas/dia = 6 buscas/dia ≈ 180 buscas/mês** — dentro das
-**250 gratuitas** do SerpAPI, sobre até espaço para Viracopos (`ORIGENS_ROTACAO=GRU,CGH,VCP,GRU`)
-ou mais destinos por rodada.
+Com `DESTINOS_POR_EXECUCAO = 4`, temos:
+**4 destinos × 2 rodadas/dia = 8 buscas/dia ≈ 240 buscas/mês** — dentro das
+**250 gratuitas** do SerpAPI, com folga para rodadas manuais.
 
-A janela de destinos é **deslizante**: cada rodada pega um pedacinho do
-`DESTINOS_POOL`, e em ~4 dias todas as cidades já foram verificadas
-(pool de 27 cidades × 6h por janela).
+A janela de destinos é **deslizante**: cada rodada pega 4 do `DESTINOS_POOL`,
+e em ~4 dias todas as 27 cidades já foram verificadas.
 
-> Fuso: o cron do GitHub roda em **UTC**. As 00h/06h/12h/18h UTC correspondem
-> a 21h/03h/09h/15h no horário de Brasília.
+> Fuso: o cron do GitHub roda em **UTC**. As rodadas às 00h e 12h UTC
+> correspondem a **21h e 09h no horário de Brasília**.
 
 ---
 

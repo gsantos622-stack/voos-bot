@@ -2,7 +2,7 @@ name: Voos Bot
 
 on:
   schedule:
-    - cron: "0 */6 * * *"   # a cada 6 horas (00h, 06h, 12h, 18h UTC)
+    - cron: "0 0,12 * * *"  # 2 rodadas/dia (00h e 12h UTC) — 4 destinos cada, cabe na cota free
   workflow_dispatch:        # permite rodar manualmente na aba "Actions"
     inputs:
       origem_fixa:
@@ -33,7 +33,7 @@ concurrency:
 env:
   ORIGENS_ROTACAO: ${{ vars.ORIGENS_ROTACAO || 'GRU,GRU,CGH' }}
   DESTINOS_POOL: ${{ vars.DESTINOS_POOL || 'MIA,FLL,JFK,MCO,LAX,CDG,LIS,MAD,BCN,LHR,FCO,MXP,AMS,OPO,NRT,HND,KIX,CUN,PUJ,MBJ,CUR,GIG,SSA,FOR,REC,NAT,FLN' }}
-  DESTINOS_POR_EXECUCAO: ${{ vars.DESTINOS_POR_EXECUCAO || '2' }}
+  DESTINOS_POR_EXECUCAO: ${{ vars.DESTINOS_POR_EXECUCAO || '4' }}
   MAX_PRECO: ${{ vars.MAX_PRECO || '3500' }}
   MAX_MENSAGENS: ${{ vars.MAX_MENSAGENS || '5' }}
   MAX_ESCALAS: ${{ vars.MAX_ESCALAS || '2' }}

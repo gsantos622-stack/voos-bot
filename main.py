@@ -961,7 +961,7 @@ def _destinos_do_dia() -> list[str]:
     pool = [d.strip().upper() for d in _env("DESTINOS_POOL", POOL_PADRAO).split(",") if d.strip()]
     if not pool:
         raise RuntimeError("DESTINOS_POOL vazio. Defina a lista de destinos.")
-    n_por_rodada = max(1, _env_int("DESTINOS_POR_EXECUCAO", 2))
+    n_por_rodada = max(1, _env_int("DESTINOS_POR_EXECUCAO", 4))
     inicio = (_indice_rodada() * n_por_rodada) % len(pool)
     janela = []
     for i in range(n_por_rodada):
@@ -1064,7 +1064,7 @@ async def _cmd_status(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
         "<b>Configuração</b>\n"
         f"Fonte de voos: <code>{_fonte_voo()}</code>\n"
         f"Origem (rotacao): <code>{_env('ORIGENS_ROTACAO', 'GRU,GRU,CGH')}</code>\n"
-        f"Destinos por rodada: <code>{_env('DESTINOS_POR_EXECUCAO', '2')}</code>\n"
+        f"Destinos por rodada: <code>{_env('DESTINOS_POR_EXECUCAO', '4')}</code>\n"
         f"Pool de destinos: <code>{_env('DESTINOS_POOL', POOL_PADRAO)[:60]}</code>\n"
         f"Preço máximo: <code>R$ {_env('MAX_PRECO', '3500')}</code>\n"
         f"Ofertas no cache: <code>{len(cache.get('vistos') or {})}</code>\n"
