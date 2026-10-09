@@ -82,21 +82,9 @@ faixa.
 > o preço e o `price_insights` (média da rota) — é com isso que decidimos
 > se a oferta é promoção de verdade.
 
-### (Opcional, recomendado) Amadeus — 10.000 créditos/mês grátis
-
-Com as chaves do Amadeus, o bot passa a usar **Amadeus primeiro** e deixa o
-SerpAPI só de reserva. As buscas não contam na cota de 250 do SerpAPI e
-alguns preços voltam com a média da rota também:
-
-1. Cadastre-se em **https://developers.amadeus.com** (grátis).
-2. Entre em **My Apps → Add new app**, escolha *Self-Service* e crie um app.
-3. Copie o **API Key** (é o `AMADEUS_CLIENT_ID`) e o **API Secret**
-   (é o `AMADEUS_CLIENT_SECRET`).
-4. Adicione os dois como Secrets no GitHub (tabela do Passo 4).
-
-Enquanto não cadastrar, o bot usa **só o SerpAPI** — funciona normalmente.
-Para forçar qual fonte usar, crie a variável `FONTE_VOO` (`amadeus`,
-`serpapi` ou `ambos`; padrão com chaves cadastradas = `ambos`).
+> Nota: o plano grátis *Self-Service* da Amadeus foi **descontinuado**
+> (17/07/2026). O código de fallback Amadeus permanece no repositório, mas
+> o padrão atual é usar só o SerpAPI — que sozinho já cobre as 250 buscas/mês.
 
 ---
 
@@ -271,6 +259,18 @@ Para testar uma busca de verdade na hora, use (gasta 1–2 buscas da cota):
 
 ---
 
+## Página de ofertas (GitHub Pages)
+
+A cada rodada o bot grava `cache/ofertas.json` e o workflow gera um site
+estático com as últimas promoções (o link vai junto no resumo do Telegram).
+
+1. Ative o Pages: **Settings → Pages → Source: GitHub Actions**.
+2. Pronto — o site fica em
+   `https://gsantos622-stack.github.io/voos-bot/`.
+3. Localmente, `python gerar_site.py` gera a pasta `site/` para pré-visualizar.
+
+---
+
 ## Solução de problemas
 
 | Sintoma | Causa provável |
@@ -278,7 +278,7 @@ Para testar uma busca de verdade na hora, use (gasta 1–2 buscas da cota):
 | `SERPAPI_KEY nao configurado` | Secret não adicionado ou nome com espaço |
 | `error`: "This key is not valid" | Key digitada errada / e-mail não verificado |
 | Nada chega no Telegram | `TELEGRAM_CHAT_ID` errado; envie `/start` para o bot primeiro |
-| Rodada "em repouso" nos logs | Normal: rodada das 18h poupando a cota |
+| Rodada "em repouso" nos logs | Normal fora dos horários 21h/09h (Brasília) |
 | "acima da media ...; ignorado" | Não é promoção — o bot trabalha como esperado |
 | API retorna erro de cota | Free do SerpAPI estourou (250/mês) |
 
@@ -288,7 +288,5 @@ O bot também tenta te avisar **por Telegram** caso alguma rodada falhe.
 
 ## Roadmap
 
-- ✅ **Amadeus Self-Service API** como fonte principal (10.000 créditos/mês
-  grátis), com fallback automático para o SerpAPI. Nunca mais esbarra nos 250.
-- Página web estática (GitHub Pages) mostrando as últimas ofertas.
+- ✅ Página web estática (GitHub Pages) com as últimas promoções.
 - Hospedagem em camada grátis (Render/PythonAnywhere) para o modo polling 24/7.

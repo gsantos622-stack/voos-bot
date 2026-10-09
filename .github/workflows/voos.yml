@@ -50,6 +50,10 @@ jobs:
   voos:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -79,3 +83,14 @@ jobs:
           AMADEUS_CLIENT_ID: ${{ secrets.AMADEUS_CLIENT_ID }}
           AMADEUS_CLIENT_SECRET: ${{ secrets.AMADEUS_CLIENT_SECRET }}
         run: python main.py
+
+      - name: Gerar pagina de ofertas
+        run: python gerar_site.py
+
+      - name: Upload para GitHub Pages
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+      - name: Publicar (deploy)
+        uses: actions/deploy-pages@v4

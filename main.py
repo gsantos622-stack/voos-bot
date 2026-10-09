@@ -46,8 +46,10 @@ from telegram import Update
 BASE_DIR = Path(__file__).resolve().parent
 CACHE_DIR = BASE_DIR / "cache"
 CACHE_FILE = CACHE_DIR / "deals.json"
+OFERTAS_FILE = CACHE_DIR / "ofertas.json"
 ARQUIVO_ENV = BASE_DIR / ".env"
 FORMATO_CACHE = 2
+QTD_OFERTAS_SITE = 60
 
 log = logging.getLogger("voos-bot")
 
@@ -500,6 +502,45 @@ def _salvar_cache(cache: dict) -> None:
     CACHE_FILE.write_text(json.dumps(cache, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
+def _ler_ofertas() -> list[dict]:
+    if OFERTAS_FILE.exists():
+        try:
+            dados = json.loads(OFERTAS_FILE.read_text(encoding="utf-8"))
+            if isinstance(dados, list):
+                return dados
+        except (ValueError, OSError):
+            log.warning("ofertas.json corrompido; iniciando do zero.")
+    return []
+
+
+def _registrar_oferta(deal: dict) -> None:
+    """Guarda a oferta enviada para a pagina do GitHub Pages (dedupe por chave)."""
+    ofertas = _ler_ofertas()
+    chave = _chave_deal(deal)
+    ofertas = [o for o in ofertas if o.get("chave") != chave]
+    ofertas.insert(0, {
+        "chave": chave,
+        "enviado_em": datetime.now(timezone.utc).isoformat(),
+        "origem": deal["origem"],
+        "iata": deal["iata"],
+        "cidade": deal["cidade"],
+        "data_out": deal["data_out"],
+        "data_ret": deal["data_ret"],
+        "tipo": deal["tipo"],
+        "preco": deal["preco"],
+        "preco_media": deal.get("preco_media"),
+        "companhias": deal["companhias"],
+        "principal": deal["principal"],
+        "brasileira": deal["brasileira"],
+        "duracao": deal["duracao"],
+        "escalas": deal["escalas"],
+        "url": deal["url"],
+    })
+    CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    OFERTAS_FILE.write_text(
+        json.dumps(ofertas[:QTD_OFERTAS_SITE], ensure_ascii=False, indent=2), encoding="utf-8")
+
+
 def _chave_deal(deal: dict) -> str:
     return f"{deal['origem']}_{deal['iata']}_{deal['data_out']}_{deal['data_ret']}"
 
@@ -668,6 +709,12 @@ def _url_google_flights(d_out: date, d_ret: date, origem: str, destino: str, cid
         q += f" return {d_ret.isoformat()}"
     return ("https://www.google.com/travel/flights?" +
             urllib.parse.urlencode({"hl": "pt-br", "gl": "br", "curr": "BRL", "q": q}))
+
+
+def _url_site() -> str:
+    """URL do GitHub Pages com as ultimas promocoes."""
+    slug = _env("USER_REPO") or "gsantos622-stack/voos-bot"
+    return f"https://{slug.replace('/', '.')}/"
 
 
 # ---------------------------------------------------------------------------
@@ -1009,6 +1056,7 @@ async def _processar_origem(app, origem: str, sessao, cache: dict) -> tuple[int,
     for deal in top:
         await _enviar_deal(app, deal)
         _registrar(cache, deal)
+        _registrar_oferta(deal)
 
     log.info("%s: %d destinos avaliados, %d envios.", origem, len(achados), len(top))
     return len(top), achados
@@ -1033,6 +1081,7 @@ async def _rodar_uma_vez() -> None:
             resumo = (
                 f"📊 <b>Rodada concluída</b> — {enviadas} oferta(s) enviada(s)"
                 f" (origem: {', '.join(origens) or 'repouso'})."
+                f"\n\n🌐 Ultimas promocoes: {_url_site()}"
             )
             for chat in _chats():
                 try:
