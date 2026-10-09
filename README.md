@@ -60,7 +60,7 @@ faixa.
 
 - Envie uma mensagem para o seu bot (o mesmo que acabou de criar).
 - Abra o **@userinfobot** no Telegram e envie `/start`.
-- Ele mostra seu `id` (número puro, ex.: `5447451029`).
+- Ele mostra seu `id` (número puro, ex.: `123456789`).
   Guarde como `TELEGRAM_CHAT_ID`.
 
 > Dica: para enviar para várias pessoas/grupos, separe os IDs por vírgula.
@@ -207,7 +207,7 @@ Crie um arquivo `.env` na pasta (não versionado):
 
 ```ini
 TELEGRAM_TOKEN=123456789:AAHT26...
-TELEGRAM_CHAT_ID=5447451029
+TELEGRAM_CHAT_ID=123456789
 SERPAPI_KEY=seu_api_key
 ```
 
