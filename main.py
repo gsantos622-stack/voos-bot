@@ -1081,7 +1081,7 @@ async def _rodar_uma_vez() -> None:
             enviadas += n
             total += len(achados)
         _salvar_cache(cache)
-        if _env_bool("ENVIAR_RESUMO", True) and (enviadas or total):
+        if _env_bool("ENVIAR_RESUMO", True):
             resumo = (
                 f"📊 <b>Rodada concluída</b> — {enviadas} oferta(s) enviada(s)"
                 f" (origem: {', '.join(origens) or 'repouso'})."
