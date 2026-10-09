@@ -636,7 +636,7 @@ def _buscar_voo(origem: str, destino: str, d_out: date, d_ret: date, sessao) -> 
     else:
         params["outbound_date"] = d_out.isoformat()
         params["return_date"] = d_ret.isoformat()
-    max_preco = _env("MAX_PRECO")
+    max_preco = _env("MAX_PRECO", "8000")
     if max_preco:
         params["max_price"] = max_preco
 
@@ -644,8 +644,12 @@ def _buscar_voo(origem: str, destino: str, d_out: date, d_ret: date, sessao) -> 
     resposta = sessao.get("https://serpapi.com/search.json", params=params, timeout=90)
     resposta.raise_for_status()
     dados = resposta.json()
-    if isinstance(dados.get("error"), str):
-        raise RuntimeError(dados["error"])
+    erro = dados.get("error")
+    if isinstance(erro, str):
+        if "hasn't returned any results" in erro or "no results" in erro.lower():
+            log.info("Google Flights sem resultados p/ %s -> %s (%s).", origem, destino, erro)
+            return {}
+        raise RuntimeError(erro)
     return dados
 
 
@@ -1115,7 +1119,7 @@ async def _cmd_status(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
         f"Origem (rotacao): <code>{_env('ORIGENS_ROTACAO', 'GRU,GRU,CGH')}</code>\n"
         f"Destinos por rodada: <code>{_env('DESTINOS_POR_EXECUCAO', '4')}</code>\n"
         f"Pool de destinos: <code>{_env('DESTINOS_POOL', POOL_PADRAO)[:60]}</code>\n"
-        f"Preço máximo: <code>R$ {_env('MAX_PRECO', '3500')}</code>\n"
+        f"Preço máximo: <code>R$ {_env('MAX_PRECO', '8000')}</code>\n"
         f"Ofertas no cache: <code>{len(cache.get('vistos') or {})}</code>\n"
         f"Última atualização: <code>{cache.get('atualizado', '—')}</code>"
     )

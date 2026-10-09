@@ -136,7 +136,7 @@ No GitHub, entre em **Settings → Secrets and variables → Actions** e adicion
 | `ORIGENS_ROTACAO` | `GRU,GRU,CGH` | Aeroportos de origem, sequência diária |
 | `DESTINOS_POOL` | 27 cidades (EUA, Europa, Japão, Caribe, Brasil) | Lista de destinos monitorados (IATA) |
 | `DESTINOS_POR_EXECUCAO` | `4` | Quantos destinos buscar a cada rodada |
-| `MAX_PRECO` | `3500` | Teto de preço (ida e volta, por pessoa) |
+| `MAX_PRECO` | `8000` | Teto de preço (ida e volta, por pessoa) |
 | `MAX_MENSAGENS` | `5` | Máximo de ofertas enviadas por rodada |
 | `MAX_ESCALAS` | `2` | `0`=qualquer, `1`=só direto, `2`=até 1 escala, `3`=até 2 |
 | `TIPO_VOO` | `1` | `1` = ida e volta, `2` = só ida |
