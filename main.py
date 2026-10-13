@@ -879,6 +879,23 @@ def _resumo_roteiro(deal: dict) -> tuple[list[str], str]:
 
 
 # ---------------------------------------------------------------------------
+# Hotéis (links de busca — sem API, sem cota)
+# ---------------------------------------------------------------------------
+
+def _linha_hoteis(cidade: str) -> str:
+    c = urllib.parse.quote(cidade)
+    booking = (f"https://www.booking.com/searchresults.pt-br.html?ss={c}"
+               f"&group_adults=1&no_rooms=1&egf=1")
+    airbnb = f"https://www.airbnb.com.br/s/{c}/homes"
+    ghotels = ("https://www.google.com/travel/hotels?q="
+               f"{urllib.parse.quote('hotéis em ' + cidade)}&hl=pt-BR&gl=br&currency=BRL")
+    return (f"🏨 Hotéis em {_escapar(cidade)}: "
+            f"<a href=\"{booking}\">Booking</a> · "
+            f"<a href=\"{airbnb}\">Airbnb</a> · "
+            f"<a href=\"{ghotels}\">Google</a>\n")
+
+
+# ---------------------------------------------------------------------------
 # Formatação da mensagem
 # ---------------------------------------------------------------------------
 
@@ -916,6 +933,7 @@ def _montar_mensagem(deal: dict) -> str:
     for ideia in ideias[:3]:
         partes.append(f"• {_escapar(ideia)}")
     partes.append(f"🎟️ <a href=\"{link_gyg}\">Buscar passeios no GetYourGuide</a>\n")
+    partes.append(_linha_hoteis(deal["cidade"]))
     partes.append("— sent by <i>Voos BR + GetYourGuide</i>")
 
     return "\n".join(partes)

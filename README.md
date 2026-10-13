@@ -25,7 +25,8 @@ GitHub Actions (a cada 6h)
         │
         ▼
   Monta mensagem: oferta + links (Google Flights / site da cia) +
-                  3 ideias de passeio + link GetYourGuide
+                  3 ideias de passeio + link GetYourGuide +
+                  links de hotéis (Booking / Airbnb / Google)
         │
         ▼
   Envia para os seus chats no Telegram
@@ -253,7 +254,7 @@ Para testar uma busca de verdade na hora, use (gasta 1–2 buscas da cota):
 • Passeio de lancha pelas mansões e pelo bairro Art Deco
 • Tour pelos Everglades com barco a ar e jacarés
 🎟️ Buscar passeios no GetYourGuide
-
+🏨 Hotéis em Miami: Booking · Airbnb · Google
 — sent by Voos BR + GetYourGuide
 ```
 
